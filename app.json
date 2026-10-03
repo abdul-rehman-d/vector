@@ -1,9 +1,12 @@
 {
   "expo": {
-    "name": "vector",
+    "name": "Vector",
     "slug": "vector",
     "scheme": "vector",
-    "platforms": ["android", "ios"],
+    "platforms": [
+      "android",
+      "ios"
+    ],
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -17,7 +20,7 @@
       }
     },
     "android": {
-      "package": "com.abdulrehman.vector",
+      "package": "com.abdulrehmand.vector",
       "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "backgroundColor": "#090C0A",
@@ -28,7 +31,20 @@
     },
     "plugins": [
       "expo-router",
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#090C0A",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#090C0A",
+            "image": "./assets/splash-icon.png"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,9 +1,86 @@
-import { Platform, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  Animated,
+  Easing,
+  Image,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { Button, Surface, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { NavigationDisplay } from '@/components/NavigationDisplay';
 import { useNavigationState } from '@/hooks/useNavigationState';
+
+function BrandHeader() {
+  return (
+    <View style={styles.header}>
+      <Image
+        source={require('../../assets/logo-mark.png')}
+        style={styles.logo}
+        resizeMode="contain"
+        accessible={false}
+      />
+      <Text variant="headlineMedium" style={styles.brand}>
+        Vector
+      </Text>
+    </View>
+  );
+}
+
+function WaitingPulse() {
+  const [progress] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(progress, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(progress, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    animation.start();
+    return () => animation.stop();
+  }, [progress]);
+
+  const theme = useTheme();
+
+  return (
+    <Animated.View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[
+        styles.pulse,
+        {
+          backgroundColor: theme.colors.primary,
+          opacity: progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.35, 1],
+          }),
+          transform: [
+            {
+              scale: progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.8, 1.55],
+              }),
+            },
+          ],
+        },
+      ]}
+    />
+  );
+}
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -18,9 +95,7 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={[styles.flex, { backgroundColor: theme.colors.background }]}>
         <View>
-          <Text variant="displaySmall" style={styles.brand}>
-            Vector
-          </Text>
+          <BrandHeader />
           <Text variant="headlineSmall" style={styles.message}>
             Android only for now
           </Text>
@@ -46,13 +121,9 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.flex, styles.container]}>
-        <View style={styles.header}>
-          <Text variant="displaySmall" style={styles.brand}>
-            Vector
-          </Text>
-        </View>
+        <BrandHeader />
         <View style={styles.main}>
-          <View style={[styles.pulse, { backgroundColor: theme.colors.primary }]} />
+          <WaitingPulse />
           <Text variant="headlineSmall" style={styles.message}>
             Waiting for navigation
           </Text>
@@ -124,8 +195,13 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
+  },
+  logo: {
+    width: 42,
+    height: 42,
   },
   main: {
     flex: 1,
@@ -136,7 +212,7 @@ const styles = StyleSheet.create({
   },
   brand: {
     fontWeight: '800',
-    letterSpacing: -1.5,
+    letterSpacing: -1,
   },
   pulse: {
     width: 9,
@@ -158,7 +234,7 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     borderRadius: 18,
     padding: 18,
-    marginHorizontal: "auto",
+    marginHorizontal: 'auto',
     gap: 12,
   },
   accessRow: {
@@ -173,7 +249,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   accessState: {
-    marginLeft: "auto",
+    marginLeft: 'auto',
   },
   buttonContent: {
     minHeight: 46,
