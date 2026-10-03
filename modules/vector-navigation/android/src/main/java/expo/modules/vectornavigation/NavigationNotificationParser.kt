@@ -4,7 +4,7 @@ import android.app.Notification
 
 object NavigationNotificationParser {
   private val maneuverRegex = Regex(
-    """\b(turn|keep|bear|take|continue|head|merge|exit|u[- ]?turn|roundabout|destination|arrive)\b""",
+    """\b(turn|keep|bear|take|continue|head|merge|exit|u[- ]?turn|roundabout|destination|arrive|rerouting)\b""",
     RegexOption.IGNORE_CASE,
   )
   private val distanceRegex = Regex(
@@ -16,7 +16,11 @@ object NavigationNotificationParser {
     RegexOption.IGNORE_CASE,
   )
   private val roadSeparatorRegex = Regex(
-    """\s+(?:onto|toward|towards)\s+""",
+    """\s+(?:on|onto|toward|towards)\s+""",
+    RegexOption.IGNORE_CASE,
+  )
+  private val arrivalTimeRegex = Regex(
+    """^arrive\s+(?:at\s+)?\d{1,2}:\d{2}(?:\s*[ap]\.?m\.?)?$""",
     RegexOption.IGNORE_CASE,
   )
   private val leadingDistanceRegex = Regex(
@@ -26,14 +30,34 @@ object NavigationNotificationParser {
 
   fun parse(notification: Notification): NavigationStateData? {
     val lines = notificationText(notification)
-    if (lines.isEmpty()) return null
-
-    val combined = lines.joinToString(" • ")
     val channelLooksLikeNavigation = notification.channelId
       ?.contains("navigation", ignoreCase = true) == true
     val categoryLooksLikeNavigation = notification.category == "navigation"
     val isOngoing = notification.flags and Notification.FLAG_ONGOING_EVENT != 0
-    val maneuverLine = lines.firstOrNull { maneuverRegex.containsMatchIn(it) }
+
+    return parseText(
+      lines = lines,
+      channelLooksLikeNavigation = channelLooksLikeNavigation,
+      categoryLooksLikeNavigation = categoryLooksLikeNavigation,
+      isOngoing = isOngoing,
+    )
+  }
+
+  internal fun parseText(
+    lines: List<String>,
+    channelLooksLikeNavigation: Boolean = true,
+    categoryLooksLikeNavigation: Boolean = true,
+    isOngoing: Boolean = true,
+  ): NavigationStateData? {
+    if (lines.isEmpty()) return null
+
+    val combined = lines.joinToString(" • ")
+    val durationStatusLine = lines.firstOrNull { durationRegex.containsMatchIn(it) }
+    val arrivalStatusLine = lines.firstOrNull { arrivalTimeRegex.matches(it) }
+    val statusLines = setOfNotNull(durationStatusLine, arrivalStatusLine)
+    val maneuverLine = lines.firstOrNull {
+      it !in statusLines && maneuverRegex.containsMatchIn(it)
+    }
 
     if (!channelLooksLikeNavigation && !categoryLooksLikeNavigation &&
       !(isOngoing && maneuverLine != null)
@@ -41,15 +65,15 @@ object NavigationNotificationParser {
       return null
     }
 
-    val statusLine = lines.firstOrNull { durationRegex.containsMatchIn(it) }
     val distance = maneuverLine?.let(distanceRegex::find)?.value
       ?: lines
         .asSequence()
-        .filter { it != statusLine }
+        .filter { it !in statusLines }
         .mapNotNull { distanceRegex.find(it)?.value }
         .firstOrNull()
-    val eta = statusLine?.let(durationRegex::find)?.value
-    val remainingDistance = statusLine
+    val eta = durationStatusLine?.let(durationRegex::find)?.value
+      ?: arrivalStatusLine
+    val remainingDistance = durationStatusLine
       ?.let { distanceRegex.findAll(it).lastOrNull()?.value }
       ?.takeUnless { it.equals(distance, ignoreCase = true) }
       ?: distanceRegex.findAll(combined).map { it.value }.lastOrNull()
@@ -73,7 +97,7 @@ object NavigationNotificationParser {
         ?.takeIf(String::isNotBlank)
     }
     val road = roadFromInstruction ?: lines.firstOrNull { line ->
-      line != maneuverLine && line != statusLine &&
+      line != maneuverLine && line !in statusLines &&
         !distanceRegex.matches(line) &&
         !line.contains("navigation", ignoreCase = true) &&
         !line.contains("driving directions", ignoreCase = true)
@@ -98,6 +122,7 @@ object NavigationNotificationParser {
       add(extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString())
       add(extras.getCharSequence(Notification.EXTRA_INFO_TEXT)?.toString())
       add(extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString())
+      add(extras.getCharSequence("android.shortCriticalText")?.toString())
       extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)
         ?.forEach { add(it?.toString()) }
       add(notification.tickerText?.toString())
