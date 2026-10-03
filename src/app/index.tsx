@@ -113,7 +113,10 @@ export default function HomeScreen() {
   if (navigationState.isNavigating) {
     return (
       <SafeAreaView style={[styles.flex, { backgroundColor: theme.colors.background }]}>
-        <NavigationDisplay state={navigationState} />
+        <View style={[styles.flex, styles.container]}>
+          <BrandHeader />
+          <NavigationDisplay state={navigationState} />
+        </View>
       </SafeAreaView>
     );
   }
