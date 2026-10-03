@@ -16,8 +16,8 @@ export default function HomeScreen() {
 
   if (Platform.OS === 'ios') {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.centered}>
+      <SafeAreaView style={[styles.flex, { backgroundColor: theme.colors.background }]}>
+        <View>
           <Text variant="displaySmall" style={styles.brand}>
             Vector
           </Text>
@@ -37,30 +37,34 @@ export default function HomeScreen() {
 
   if (navigationState.isNavigating) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.flex, { backgroundColor: theme.colors.background }]}>
         <NavigationDisplay state={navigationState} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.centered}>
-        <Text variant="displaySmall" style={styles.brand}>
-          Vector
-        </Text>
-        <View style={[styles.pulse, { backgroundColor: theme.colors.primary }]} />
-        <Text variant="headlineSmall" style={styles.message}>
-          Waiting for navigation
-        </Text>
-        <Text
-          variant="bodyLarge"
-          style={[styles.explanation, { color: theme.colors.onSurfaceVariant }]}
-        >
-          Start a route in Google Maps and the next direction will appear here.
-        </Text>
+    <SafeAreaView style={[styles.flex, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.flex, styles.container]}>
+        <View style={styles.header}>
+          <Text variant="displaySmall" style={styles.brand}>
+            Vector
+          </Text>
+        </View>
+        <View style={styles.main}>
+          <View style={[styles.pulse, { backgroundColor: theme.colors.primary }]} />
+          <Text variant="headlineSmall" style={styles.message}>
+            Waiting for navigation
+          </Text>
+          <Text
+            variant="bodyLarge"
+            style={[styles.explanation, { color: theme.colors.onSurfaceVariant }]}
+          >
+            Start a route in Google Maps and the next direction will appear here.
+          </Text>
+        </View>
 
-        <Surface style={styles.accessCard} elevation={0}>
+        <Surface style={styles.accessCard} elevation={1}>
           <View style={styles.accessRow}>
             <View
               style={[
@@ -72,15 +76,13 @@ export default function HomeScreen() {
                 },
               ]}
             />
-            <View style={styles.accessCopy}>
-              <Text variant="labelLarge">Notification access</Text>
-              <Text
-                variant="bodyMedium"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                {notificationAccessEnabled ? 'Enabled' : 'Required'}
-              </Text>
-            </View>
+            <Text variant="labelLarge">Notification access</Text>
+            <Text
+              variant="bodyMedium"
+              style={[styles.accessState, { color: theme.colors.onSurfaceVariant }]}
+            >
+              {notificationAccessEnabled ? 'Enabled' : 'Required'}
+            </Text>
           </View>
           {!notificationAccessEnabled && nativeModuleAvailable ? (
             <Button
@@ -114,14 +116,23 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  flex: {
     flex: 1,
   },
-  centered: {
+  container: {
+    padding: 20,
+    gap: 20,
+  },
+  header: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  main: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
+    gap: 14,
   },
   brand: {
     fontWeight: '800',
@@ -131,8 +142,7 @@ const styles = StyleSheet.create({
     width: 9,
     height: 9,
     borderRadius: 5,
-    marginTop: 24,
-    marginBottom: 20,
+    marginVertical: 20,
   },
   message: {
     fontWeight: '600',
@@ -140,7 +150,6 @@ const styles = StyleSheet.create({
   },
   explanation: {
     maxWidth: 360,
-    marginTop: 12,
     lineHeight: 25,
     textAlign: 'center',
   },
@@ -148,28 +157,30 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     borderRadius: 18,
-    marginTop: 44,
     padding: 18,
+    marginHorizontal: "auto",
+    gap: 12,
   },
   accessRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 14,
+    marginHorizontal: 4,
   },
   statusDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    marginRight: 14,
   },
-  accessCopy: {
-    flex: 1,
+  accessState: {
+    marginLeft: "auto",
   },
   buttonContent: {
     minHeight: 46,
   },
   debugHint: {
     maxWidth: 360,
-    marginTop: 18,
+    marginHorizontal: "auto",
     textAlign: 'center',
   },
 });
